@@ -49,6 +49,7 @@ export const getVideoTextContent = async (avid: string) => {
       qn: 16,
     });
     console.log(wbiParams);
+    // 这个接口家了其他header反而被风控了
     const response = await axios.get(
       `https://api.bilibili.com/x/player/wbi/playurl?${wbiParams}`,
       {

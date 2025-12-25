@@ -7,10 +7,15 @@ import { createQwenAgent, createDeepseekAgent } from './agent';
 import { FileCallbackHandler } from './utils/logging';
 import fs from 'fs/promises';
 import path from 'path';
+import { getBuvid } from './utils/getBuvid';
+import { getVideoTextContent } from './tools/getVideoContent';
+import { qwenModel } from './model/tongyi';
 
 const POLL_INTERVAL_MS = Number(process.env.POLL_INTERVAL_MS || '10000');
 let timer: ReturnType<typeof setTimeout> | null = null;
 let processing = false;
+export let buvid3 = '';
+export let buvid4 = '';
 
 async function getAgent() {
   return await createDeepseekAgent();
@@ -50,6 +55,12 @@ async function clearDownloads() {
 
 async function tick() {
   if (processing) return;
+  if (!buvid3 || !buvid4) {
+    const buvid = await getBuvid();
+    buvid3 = buvid.buvid3;
+    buvid4 = buvid.buvid4;
+    console.log('获取到新的buvid3和buvid4', buvid3, buvid4);
+  }
   const ats = await getUnreadAts();
   if (ats.length === 0) {
     console.log('没有新的@消息');
@@ -68,7 +79,19 @@ async function tick() {
 }
 
 async function main() {
+  // const content = await getVideoTextContent('115769300096025');
+  // console.log(content);
   await tick();
+  // const agent = await getAgent();
+  // const result = await agent.invoke(
+  //   { messages: [{ role: 'user', content: 'cs主播玩机器最喜欢的职业选手是谁？' }] },
+  // );
+  // console.log(result);
+  // const model = qwenModel;
+  // const res = await model.invoke(
+  //   "cs2主播玩机器最喜欢的职业选手是谁？"
+  // );
+  // console.log(res);
 }
 
 main().catch((error) => {

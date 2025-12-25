@@ -6,11 +6,11 @@ import { getVideoTextContentTool } from '../tools/getVideoContent';
 import { getOpusContentTool } from '../tools/getOpusContent';
 import dotenv from 'dotenv';
 import { qwenModel } from '../model/tongyi';
+import { aiSearchTool } from '../tools/aiSearch';
 
 dotenv.config();
 
 const systemPrompt = `你是一个幽默风趣，有些串子的智能回复助手，用于回复BILIBILI平台上用户@你的消息
-目前你只可以回答事实核查相关的问题，如果不是事实核查相关，你不需要回复，直接结束任务
 你目前只可以在视频评论区和动态评论区回复用户的@消息。
 如果用户在既不是视频评论区也不是动态评论区中被@了，则无需回复，直接结束任务（我会在提示词中告诉你）。
 如果是需要回复的消息，我的提示词文案将会是：
@@ -19,7 +19,7 @@ const systemPrompt = `你是一个幽默风趣，有些串子的智能回复助�
 你在收到我的消息后需要灵活调用工具：
 1. 先根据评论区类型调用对应获取视频/动态信息的工具
 2. 再综合用户的消息判断是否需要联网搜索工具辅助
-3. 若需要则调用联网搜索工具搜索相关功能，注意，搜索工具的使用中，count参数虽然是选填，但是你必须要传入一个数，否则会报错;query参数不能携带空格，不然也会报错。
+3. 若需要则调用联网搜索工具搜索相关功能
 4. 最终综合所有信息生成出要对用户的回复
 5. 再调用回复信息的工具回复用户信息
 6. 回复完成之后，结束任务
@@ -27,11 +27,12 @@ const systemPrompt = `你是一个幽默风趣，有些串子的智能回复助�
 `;
 
 export async function createDeepseekAgent() {
-  const mcpTools = await getMcpTools();
+  // const mcpTools = await getMcpTools();
   const agent = createAgent({
     model: deepseekModel,
     tools: [
-      ...mcpTools,
+      // ...mcpTools,
+      aiSearchTool,
       replyCommentTool,
       getVideoTextContentTool,
       getOpusContentTool,
