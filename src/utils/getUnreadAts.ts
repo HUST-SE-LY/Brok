@@ -10,7 +10,7 @@ async function getUnreadAtNums() {
       Cookie: `SESSDATA=${process.env.SESSDATA || ''}`,
     },
   })
-  return res.data?.data?.at || 1;
+  return res.data?.data?.at || 0;
 }
 
 export async function getUnreadAts() {
