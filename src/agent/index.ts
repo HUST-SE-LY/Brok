@@ -5,6 +5,7 @@ import { replyCommentTool } from '../tools/replyComment';
 import { getVideoTextContentTool } from '../tools/getVideoContent';
 import { getOpusContentTool } from '../tools/getOpusContent';
 import dotenv from 'dotenv';
+import { qwenModel } from '../model/tongyi';
 
 dotenv.config();
 
@@ -38,6 +39,19 @@ export async function createDeepseekAgent() {
     model: deepseekModel,
     tools: [
       ...mcpTools,
+      replyCommentTool,
+      getVideoTextContentTool,
+      getOpusContentTool,
+    ],
+    systemPrompt,
+  });
+  return agent;
+}
+
+export async function createQwenAgent() {
+  const agent = createAgent({
+    model: qwenModel,
+    tools: [
       replyCommentTool,
       getVideoTextContentTool,
       getOpusContentTool,

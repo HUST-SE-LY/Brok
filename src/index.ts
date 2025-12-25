@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { getUnreadAts } from './utils/getUnreadAts';
-import { createDeepseekAgent } from './agent';
+import { createQwenAgent, createDeepseekAgent } from './agent';
 import { FileCallbackHandler } from './utils/logging';
 import fs from 'fs/promises';
 import path from 'path';
@@ -17,7 +17,7 @@ async function getAgent() {
 }
 
 async function runBatch(ats: string[]) {
-  const agent = await getAgent();
+  const agent = await createQwenAgent();
   const logger = new FileCallbackHandler(
     process.env.LANGCHAIN_LOG_PATH || 'logs/langchain.log'
   );

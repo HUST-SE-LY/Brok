@@ -3,4 +3,5 @@ downloads
 logs
 .DS_Store
 .env
+dist
 
