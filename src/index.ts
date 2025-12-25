@@ -17,7 +17,7 @@ async function getAgent() {
 }
 
 async function runBatch(ats: string[]) {
-  const agent = await createQwenAgent();
+  const agent = await getAgent();
   const logger = new FileCallbackHandler(
     process.env.LANGCHAIN_LOG_PATH || 'logs/langchain.log'
   );
