@@ -2,15 +2,45 @@ import { axiosInstance } from './axios';
 import { Type } from '../tools/replyComment';
 import { thumbsUpComment, thumbsUpVideo } from './thumbsUp';
 
-async function getUnreadAtNums() {
+async function getUnreadNums() {
   const res = await axiosInstance.get(
     'https://api.vc.bilibili.com/x/im/web/msgfeed/unread'
   );
-  return res.data?.data?.at || 0;
+  const unreadAtNums = res.data?.data?.at || 0;
+  const unreadReplyNums = res.data?.data?.reply || 0;
+  return {
+    unreadAtNums,
+    unreadReplyNums,
+  };
 }
 
-export async function getUnreadAts() {
-  const unreadAtNums = await getUnreadAtNums();
+export async function getUnreadReplyAndAts() {
+  const { unreadAtNums, unreadReplyNums } = await getUnreadNums();
+  const replyItems = await getUnreadReplys(unreadReplyNums);
+  const atItems = await getUnreadAts(unreadAtNums);
+  return [...replyItems, ...atItems];
+}
+
+export async function getUnreadReplys(unreadReplyNums: number) {
+  if (unreadReplyNums === 0) {
+    return [];
+  }
+  const res = await axiosInstance.get(
+    'https://api.bilibili.com/x/msgfeed/reply'
+  );
+  const replyItems =
+    res.data?.data?.items
+      ?.slice(0, unreadReplyNums)
+      ?.filter(
+        (item: any) =>
+          item?.item?.business_id === Type.Video ||
+          item?.item?.business_id === Type.Opus
+      ) || [];
+  const resText = await Promise.all(replyItems.map(getAtInfo));
+  return resText;
+}
+
+export async function getUnreadAts(unreadAtNums: number) {
   if (unreadAtNums === 0) {
     return [];
   }
@@ -45,12 +75,11 @@ export const getAtInfo = async (at: any) => {
     rpid: parent,
     type: businessId,
   });
-  if(businessId === Type.Video) {
+  if (businessId === Type.Video) {
     // 点赞视频
     await thumbsUpVideo({
       aid: oid,
     });
   }
-  return `用户在${typeText}中@了你，内容为:${sourceContent}。这个${typeText}的oid为${oid}，根评论的id(root)为${root}，要回复的评论id(parent)为${parent}`
-}
-
+  return `用户在${typeText}中@了你，内容为:${sourceContent}。这个${typeText}的oid为${oid}，根评论的id(root)为${root}，要回复的评论id(parent)为${parent}`;
+};

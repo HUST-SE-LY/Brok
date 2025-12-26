@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-import { getUnreadAts } from './utils/getUnreadAts';
+import { getUnreadAts, getUnreadReplyAndAts } from './utils/getUnreadAts';
 import { createQwenAgent, createDeepseekAgent } from './agent';
 import { FileCallbackHandler } from './utils/logging';
 import fs from 'fs/promises';
@@ -61,15 +61,15 @@ async function tick() {
     buvid4 = buvid.buvid4;
     console.log('获取到新的buvid3和buvid4', buvid3, buvid4);
   }
-  const ats = await getUnreadAts();
-  if (ats.length === 0) {
-    console.log('没有新的@消息');
+  const unreads = await getUnreadReplyAndAts();
+  if (unreads.length === 0) {
+    console.log('没有新的消息');
     timer = setTimeout(tick, POLL_INTERVAL_MS);
     return;
   }
   processing = true;
   try {
-    await runBatch(ats);
+    await runBatch(unreads);
   } catch (e) {
     console.error(e);
   } finally {
@@ -92,6 +92,7 @@ async function main() {
   //   "cs2主播玩机器最喜欢的职业选手是谁？"
   // );
   // console.log(res);
+  // await getUnreadReplyAndAts();
 }
 
 main().catch((error) => {
