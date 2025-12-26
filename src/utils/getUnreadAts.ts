@@ -64,7 +64,12 @@ export const getAtInfo = async (at: any) => {
   if (businessId !== Type.Video && businessId !== Type.Opus) {
     return '在既不是视频评论区也不是动态评论区中被at了，无需回复，终止任务';
   }
-  const oid = item.subject_id || '';
+  let oid;
+  if (businessId === Type.Video) {
+    oid = item.subject_id || '';
+  } else {
+    oid = item.uri.split('#')?.[0]?.split('/')?.pop() || '';
+  }
   const parent = item.source_id || '';
   const root = item.target_id || item.source_id || '';
   const sourceContent = item?.source_content || '';

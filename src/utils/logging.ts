@@ -15,9 +15,24 @@ export class FileCallbackHandler extends BaseCallbackHandler {
     }
   }
 
+  private async ensureDirExists(dir: string) {
+    await fs.promises.mkdir(dir, { recursive: true });
+  }
+
+  private getDatedFilePath() {
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const dir = path.dirname(this.filePath);
+    const base = path.basename(this.filePath);
+    const datedDir = path.join(dir, dateStr);
+    return { datedDir, fullPath: path.join(datedDir, base) };
+  }
+
   private async write(entry: Record<string, any>) {
-    const line = JSON.stringify({ ts: new Date().toISOString(), ...entry }) + '\n';
-    await fs.promises.appendFile(this.filePath, line);
+    const line =
+      JSON.stringify({ ts: new Date().toISOString(), ...entry }) + '\n';
+    const { datedDir, fullPath } = this.getDatedFilePath();
+    await this.ensureDirExists(datedDir);
+    await fs.promises.appendFile(fullPath, line);
   }
 
   async handleLLMStart(llm: any, prompts: string[], runId?: string) {
@@ -56,4 +71,3 @@ export class FileCallbackHandler extends BaseCallbackHandler {
     await this.write({ type: 'tool_error', runId, error: String(err) });
   }
 }
-
