@@ -34,6 +34,7 @@ const getVideoBaseInfo = async (params: { avid: string }) => {
     title: baseData?.title,
     pubdate: baseData?.pubdate,
     desc: baseData?.desc,
+    owner: baseData?.owner?.name || '',
   };
 };
 
@@ -41,7 +42,7 @@ export const getVideoTextContent = async (avid: string) => {
   if (!avid) {
     throw new Error('avid is required');
   }
-  const { cid, title, pubdate, desc } = await getVideoBaseInfo({ avid });
+  const { cid, title, pubdate, desc, owner } = await getVideoBaseInfo({ avid });
   if (cid) {
     const wbiParams = await getWbiParams({
       avid,
@@ -69,11 +70,11 @@ export const getVideoTextContent = async (avid: string) => {
     const audioPath = await extractAudio(videoPath, `downloads/${avid}.m4a`);
     const transcript = await transcribeAudio(audioPath);
     console.log(
-      `视频内容提取工具调用结束，视频标题：${title}\n发布时间：${new Date(
+      `视频内容提取工具调用结束，视频UP主名：${owner}\n视频标题：${title}\n发布时间：${new Date(
         pubdate * 1000
       ).toLocaleString()}\n视频简介：${desc}\n视频文本内容：${transcript}`
     );
-    return `视频标题：${title}\n发布时间：${new Date(
+    return `视频UP主名：${owner}\n视频标题：${title}\n发布时间：${new Date(
       pubdate * 1000
     ).toLocaleString()}\n视频简介：${desc}\n视频文本内容：${transcript}`;
   }

@@ -6,6 +6,7 @@ async function getUnreadNums() {
   const res = await axiosInstance.get(
     'https://api.vc.bilibili.com/x/im/web/msgfeed/unread'
   );
+  console.log(res.data);
   const unreadAtNums = res.data?.data?.at || 0;
   const unreadReplyNums = res.data?.data?.reply || 0;
   return {
@@ -16,9 +17,11 @@ async function getUnreadNums() {
 
 export async function getUnreadReplyAndAts() {
   const { unreadAtNums, unreadReplyNums } = await getUnreadNums();
+  console.log('unreadAtNums', unreadAtNums);
+  console.log('unreadReplyNums', unreadReplyNums);
   const replyItems = await getUnreadReplys(unreadReplyNums);
   const atItems = await getUnreadAts(unreadAtNums);
-  return [...replyItems, ...atItems];
+  return [...replyItems.filter(item => !atItems.find(at => at.id === item.id)), ...atItems];
 }
 
 export async function getUnreadReplys(unreadReplyNums: number) {
@@ -36,7 +39,7 @@ export async function getUnreadReplys(unreadReplyNums: number) {
           item?.item?.business_id === Type.Video ||
           item?.item?.business_id === Type.Opus
       ) || [];
-  const resText = await Promise.all(replyItems.map(getAtInfo));
+  const resText = await Promise.all(replyItems.map(getMsgInfo));
   return resText;
 }
 
@@ -54,11 +57,11 @@ export async function getUnreadAts(unreadAtNums: number) {
           item?.item?.business_id === Type.Opus
       ) || [];
 
-  const resText = await Promise.all(atItems.map(getAtInfo));
+  const resText = await Promise.all(atItems.map(getMsgInfo));
   return resText;
 }
 
-export const getAtInfo = async (at: any) => {
+export const getMsgInfo = async (at: any) => {
   const item = at?.item || {};
   const businessId = item?.business_id || '';
   if (businessId !== Type.Video && businessId !== Type.Opus) {
@@ -86,5 +89,5 @@ export const getAtInfo = async (at: any) => {
       aid: oid,
     });
   }
-  return `用户在${typeText}中@了你，内容为:${sourceContent}。这个${typeText}的oid为${oid}，根评论的id(root)为${root}，要回复的评论id(parent)为${parent}`;
+  return `用户在${typeText}中提到了你，内容为:${sourceContent}。这个${typeText}的oid为${oid}，根评论的id(root)为${root}，要回复的评论id(parent)为${parent}`;
 };

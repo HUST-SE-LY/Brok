@@ -15,8 +15,10 @@ export async function getOpusContent({ dynamic_id }: { dynamic_id: string }) {
     return '该动态不是文字动态';
   }
   console.log(JSON.stringify(res.data?.data?.item, null, 2));
+  const content = res.data?.data?.item?.modules?.module_dynamic?.desc?.text || '';
+  const author = res.data?.data?.item?.modules?.module_author?.name || '';
   return (
-    res.data?.data?.item?.modules?.module_dynamic?.desc?.text ||
+    `动态作者名：${author}，动态文字内容：${content}` ||
     '该动态暂无文字内容'
   );
 }
