@@ -63,6 +63,7 @@ export async function getUnreadAts(unreadAtNums: number) {
 
 export const getMsgInfo = async (at: any) => {
   const item = at?.item || {};
+  const user = at?.user || {};
   const businessId = item?.business_id || '';
   if (businessId !== Type.Video && businessId !== Type.Opus) {
     return '在既不是视频评论区也不是动态评论区中被at了，无需回复，终止任务';
@@ -74,7 +75,7 @@ export const getMsgInfo = async (at: any) => {
     oid = item.uri.split('#')?.[0]?.split('/')?.pop() || '';
   }
   const parent = item.source_id || '';
-  const root = item.target_id || item.source_id || '';
+  const root = item?.root_id ||item.target_id || item.source_id || '';
   const sourceContent = item?.source_content || '';
   const typeText = businessId === Type.Video ? '视频评论区' : '动态评论区';
   // 点赞评论
@@ -89,5 +90,5 @@ export const getMsgInfo = async (at: any) => {
       aid: oid,
     });
   }
-  return `用户在${typeText}中提到了你，内容为:${sourceContent}。这个${typeText}的oid为${oid}，根评论的id(root)为${root}，要回复的评论id(parent)为${parent}`;
+  return `用户${user?.nickname || ''}在${typeText}中提到了你，内容为:${sourceContent}。这个${typeText}的oid为${oid}，根评论的id(root)为${root}，要回复的评论id(parent)为${parent}`;
 };

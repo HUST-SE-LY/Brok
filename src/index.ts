@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { getUnreadAts, getUnreadReplyAndAts } from './utils/getUnreadAts';
-import { createQwenAgent, createDeepseekAgent } from './agent';
+import { createDeepseekAgent } from './agent';
 import { FileCallbackHandler } from './utils/logging';
 import fs from 'fs/promises';
 import path from 'path';
@@ -11,6 +11,8 @@ import { getBuvid } from './utils/getBuvid';
 import { getVideoTextContent } from './tools/getVideoContent';
 import { qwenModel } from './model/tongyi';
 import { getOpusContent } from './tools/getOpusContent';
+import { getCommentChain } from './tools/getCommentChain';
+import { Type } from './tools/replyComment';
 
 const POLL_INTERVAL_MS = Number(process.env.POLL_INTERVAL_MS || '10000');
 let timer: ReturnType<typeof setTimeout> | null = null;
@@ -83,6 +85,13 @@ async function main() {
   // const content = await getVideoTextContent('115783476709326');
   // console.log(content);
   await tick();
+  // const chain = await getCommentChain({
+  //   oid: '898001236988526632',
+  //   type: 17,
+  //   rootId: 284495403457,
+  //   targetRpid: 284898517857,
+  // });
+  // console.log(chain);
   // const res = await getOpusContent({
   //   dynamic_id: '622088689560650558'
   // });
