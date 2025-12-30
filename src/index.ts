@@ -10,6 +10,7 @@ import path from 'path';
 import { getBuvid } from './utils/getBuvid';
 import { getVideoTextContent } from './tools/getVideoContent';
 import { qwenModel } from './model/tongyi';
+import { getOpusContent } from './tools/getOpusContent';
 
 const POLL_INTERVAL_MS = Number(process.env.POLL_INTERVAL_MS || '10000');
 let timer: ReturnType<typeof setTimeout> | null = null;
@@ -79,9 +80,13 @@ async function tick() {
 }
 
 async function main() {
-  // const content = await getVideoTextContent('115769300096025');
+  // const content = await getVideoTextContent('115783476709326');
   // console.log(content);
   await tick();
+  // const res = await getOpusContent({
+  //   dynamic_id: '622088689560650558'
+  // });
+  // console.log(res);
   // const agent = await getAgent();
   // const result = await agent.invoke(
   //   { messages: [{ role: 'user', content: 'cs主播玩机器最喜欢的职业选手是谁？' }] },

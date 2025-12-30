@@ -2,13 +2,14 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 import { getWbiParams } from '../utils/wbi';
 import { downloadWithHeaders } from '../utils/download';
-import { extractAudio } from '../utils/media';
+import { extractAudio, getMediaDuration } from '../utils/media';
 import { transcribeAudio } from '../utils/transcribe';
 import { tool } from 'langchain';
 import z from 'zod';
+import { readFileSync } from 'fs';
+import OpenAI from 'openai';
 
 dotenv.config();
-
 
 const getVideoBaseInfo = async (params: { avid: string }) => {
   const { avid } = params;
@@ -17,7 +18,6 @@ const getVideoBaseInfo = async (params: { avid: string }) => {
   }
 
   console.log('avid:', avid);
-
 
   const response = await axios.get(
     `https://api.bilibili.com/x/web-interface/view?aid=${avid}`,
@@ -69,14 +69,55 @@ export const getVideoTextContent = async (avid: string) => {
     );
     const audioPath = await extractAudio(videoPath, `downloads/${avid}.m4a`);
     const transcript = await transcribeAudio(audioPath);
-    console.log(
-      `视频内容提取工具调用结束，视频UP主名：${owner}\n视频标题：${title}\n发布时间：${new Date(
+    let duration = Number.POSITIVE_INFINITY;
+    try {
+      duration = await getMediaDuration(videoPath);
+    } catch {}
+    if (duration <= 120) {
+      const videoSummary = await getAIVideoSummary({ path: videoPath });
+      return `视频UP主名：${owner}\n视频标题：${title}\n发布时间：${new Date(
         pubdate * 1000
-      ).toLocaleString()}\n视频简介：${desc}\n视频文本内容：${transcript}`
-    );
+      ).toLocaleString()}\n视频简介：${desc}\n视频文本内容：${transcript}\n视频AI总结：${videoSummary}`;
+    }
     return `视频UP主名：${owner}\n视频标题：${title}\n发布时间：${new Date(
       pubdate * 1000
     ).toLocaleString()}\n视频简介：${desc}\n视频文本内容：${transcript}`;
+  }
+};
+
+export const getAIVideoSummary = async (params: { path: string }) => {
+  const { path } = params;
+  const videoFile = readFileSync(path);
+  const base64 = videoFile.toString('base64');
+  const openai = new OpenAI({
+    // 若没有配置环境变量，请用百炼API Key将下行替换为：apiKey: "sk-xxx"
+    // 新加坡和北京地域的API Key不同。获取API Key：https://help.aliyun.com/zh/model-studio/get-api-key
+    apiKey: process.env.ALI_CLOUD_API_KEY,
+    // 以下是北京地域base_url，如果使用新加坡地域的模型，需要将base_url替换为：https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+    baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+  });
+  const completion = await openai.chat.completions.create({
+    model: 'qwen-vl-plus',
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            // 直接传入视频文件时，请将type的值设置为video_url
+            // @ts-ignore
+            type: 'video_url',
+            video_url: { url: `data:video/mp4;base64,${base64}` },
+          },
+          { type: 'text', text: '请总结视频的主要内容' },
+        ],
+      },
+    ],
+  });
+  if (completion.choices[0].message.content) {
+    console.log(completion.choices[0].message.content);
+    return completion.choices[0].message.content;
+  } else {
+    return '视频内容总结失败';
   }
 };
 

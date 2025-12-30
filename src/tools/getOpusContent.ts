@@ -11,6 +11,7 @@ export async function getOpusContent({ dynamic_id }: { dynamic_id: string }) {
       },
     }
   );
+  console.log(JSON.stringify(res.data, null, 2));
   if (res.data?.data?.item?.type !== 'DYNAMIC_TYPE_WORD') {
     return '该动态不是文字动态';
   }
