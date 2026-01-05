@@ -86,37 +86,42 @@ export const getVideoTextContent = async (avid: string) => {
 };
 
 export const getAIVideoSummary = async (params: { path: string }) => {
-  const { path } = params;
-  const videoFile = readFileSync(path);
-  const base64 = videoFile.toString('base64');
-  const openai = new OpenAI({
-    // 若没有配置环境变量，请用百炼API Key将下行替换为：apiKey: "sk-xxx"
-    // 新加坡和北京地域的API Key不同。获取API Key：https://help.aliyun.com/zh/model-studio/get-api-key
-    apiKey: process.env.ALI_CLOUD_API_KEY,
-    // 以下是北京地域base_url，如果使用新加坡地域的模型，需要将base_url替换为：https://dashscope-intl.aliyuncs.com/compatible-mode/v1
-    baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-  });
-  const completion = await openai.chat.completions.create({
-    model: 'qwen-vl-plus',
-    messages: [
-      {
-        role: 'user',
-        content: [
-          {
-            // 直接传入视频文件时，请将type的值设置为video_url
-            // @ts-ignore
-            type: 'video_url',
-            video_url: { url: `data:video/mp4;base64,${base64}` },
-          },
-          { type: 'text', text: '请总结视频的主要内容' },
-        ],
-      },
-    ],
-  });
-  if (completion.choices[0].message.content) {
-    console.log(completion.choices[0].message.content);
-    return completion.choices[0].message.content;
-  } else {
+  try {
+    const { path } = params;
+    const videoFile = readFileSync(path);
+    const base64 = videoFile.toString('base64');
+    const openai = new OpenAI({
+      // 若没有配置环境变量，请用百炼API Key将下行替换为：apiKey: "sk-xxx"
+      // 新加坡和北京地域的API Key不同。获取API Key：https://help.aliyun.com/zh/model-studio/get-api-key
+      apiKey: process.env.ALI_CLOUD_API_KEY,
+      // 以下是北京地域base_url，如果使用新加坡地域的模型，需要将base_url替换为：https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+      baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    });
+    const completion = await openai.chat.completions.create({
+      model: 'qwen-vl-plus',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            {
+              // 直接传入视频文件时，请将type的值设置为video_url
+              // @ts-ignore
+              type: 'video_url',
+              video_url: { url: `data:video/mp4;base64,${base64}` },
+            },
+            { type: 'text', text: '请总结视频的主要内容' },
+          ],
+        },
+      ],
+    });
+    if (completion.choices[0].message.content) {
+      console.log(completion.choices[0].message.content);
+      return completion.choices[0].message.content;
+    } else {
+      return '视频内容总结失败';
+    }
+  } catch (err) {
+    console.log('视频内容总结时出错:', err);
     return '视频内容总结失败';
   }
 };
