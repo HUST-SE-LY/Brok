@@ -30,6 +30,7 @@
     "zod": "^4.2.1"
   },
   "devDependencies": {
+    "@langchain/langgraph": "^1.0.7",
     "@types/fluent-ffmpeg": "^2.1.28",
     "@types/md5": "^2.3.6",
     "@types/node": "^25.0.3",

@@ -8,5 +8,4 @@ export const deepseekModel = new ChatDeepSeek({
   model: "deepseek-chat",
   temperature: 1.3,
   apiKey: process.env.DEEPSEEK_API_KEY || '',
-  // other params...
 })

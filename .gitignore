@@ -5,3 +5,6 @@ logs
 .env
 dist
 
+
+# LangGraph API
+.langgraph_api

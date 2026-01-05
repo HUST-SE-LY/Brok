@@ -8,6 +8,9 @@ import dotenv from 'dotenv';
 import { qwenModel } from '../model/tongyi';
 import { aiSearchTool } from '../tools/aiSearch';
 import { getCommentChainTool } from '../tools/getCommentChain';
+import { MemorySaver } from "@langchain/langgraph";
+
+const checkpointer = new MemorySaver();
 
 dotenv.config();
 
@@ -44,6 +47,23 @@ export async function createDeepseekAgent() {
   });
   return agent;
 }
+
+export const agent = createAgent({
+  model: deepseekModel,
+  tools: [
+    // ...mcpTools,
+    aiSearchTool,
+    replyCommentTool,
+    getVideoTextContentTool,
+    getOpusContentTool,
+    getCommentChainTool,
+  ],
+  systemPrompt,
+  checkpointer,
+  
+});
+
+
 
 // export async function createQwenAgent() {
 //   const agent = createAgent({
