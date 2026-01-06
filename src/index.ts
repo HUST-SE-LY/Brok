@@ -8,6 +8,7 @@ import { FileCallbackHandler } from './utils/logging';
 import fs from 'fs/promises';
 import path from 'path';
 import { getBuvid } from './utils/getBuvid';
+import { setBuvids } from './utils/axios';
 import { getVideoTextContent } from './tools/getVideoContent';
 import { qwenModel } from './model/tongyi';
 import { getOpusContent } from './tools/getOpusContent';
@@ -62,6 +63,7 @@ async function tick() {
     const buvid = await getBuvid();
     buvid3 = buvid.buvid3;
     buvid4 = buvid.buvid4;
+    setBuvids(buvid3, buvid4);
     console.log('获取到新的buvid3和buvid4', buvid3, buvid4);
   }
   const unreads = await getUnreadReplyAndAts();

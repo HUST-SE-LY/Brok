@@ -1,5 +1,10 @@
 import axios, { AxiosHeaders } from 'axios';
-import { buvid3, buvid4 } from '..';
+let buvid3Value = '';
+let buvid4Value = '';
+export function setBuvids(b3: string, b4: string) {
+  buvid3Value = b3 || '';
+  buvid4Value = b4 || '';
+}
 
 export const axiosInstance = axios.create({
   timeout: 10000,
@@ -13,7 +18,7 @@ export const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use((config) => {
   const cookie = `SESSDATA=${process.env.SESSDATA || ''};bili_jct=${
     process.env.CSRF || ''
-  };buvid3=${buvid3};buvid4=${buvid4}`;
+  };buvid3=${buvid3Value};buvid4=${buvid4Value}`;
   const h = config.headers as AxiosHeaders | Record<string, any> | undefined;
   if (h && typeof (h as any).set === 'function') {
     (h as AxiosHeaders).set('Cookie', cookie);
