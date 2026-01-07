@@ -35,6 +35,7 @@ const getVideoBaseInfo = async (params: { avid: string }) => {
     pubdate: baseData?.pubdate,
     desc: baseData?.desc,
     owner: baseData?.owner?.name || '',
+    duration: baseData?.pages?.[0]?.duration,
   };
 };
 
@@ -42,7 +43,9 @@ export const getVideoTextContent = async (avid: string) => {
   if (!avid) {
     throw new Error('avid is required');
   }
-  const { cid, title, pubdate, desc, owner } = await getVideoBaseInfo({ avid });
+  const { cid, title, pubdate, desc, owner, duration } = await getVideoBaseInfo(
+    { avid }
+  );
   if (cid) {
     const wbiParams = await getWbiParams({
       avid,
@@ -67,21 +70,22 @@ export const getVideoTextContent = async (avid: string) => {
       videoUrl,
       `downloads/${avid}.mp4`
     );
-    const audioPath = await extractAudio(videoPath, `downloads/${avid}.m4a`);
-    const transcript = await transcribeAudio(audioPath);
-    let duration = Number.POSITIVE_INFINITY;
-    try {
-      duration = await getMediaDuration(videoPath);
-    } catch {}
-    if (duration <= 120) {
+    if (duration <= 240) {
       const videoSummary = await getAIVideoSummary({ path: videoPath });
       return `视频UP主名：${owner}\n视频标题：${title}\n发布时间：${new Date(
         pubdate * 1000
-      ).toLocaleString()}\n视频简介：${desc}\n视频文本内容：${transcript}\n视频AI总结：${videoSummary}`;
+      ).toLocaleString()}\n视频简介：${desc}\n视频AI总结：${videoSummary}`;
+    } else {
+      let duration = Number.POSITIVE_INFINITY;
+      try {
+        duration = await getMediaDuration(videoPath);
+      } catch {}
+      const audioPath = await extractAudio(videoPath, `downloads/${avid}.m4a`);
+      const transcript = await transcribeAudio(audioPath);
+      return `视频UP主名：${owner}\n视频标题：${title}\n发布时间：${new Date(
+        pubdate * 1000
+      ).toLocaleString()}\n视频简介：${desc}\n视频文本内容：${transcript}`;
     }
-    return `视频UP主名：${owner}\n视频标题：${title}\n发布时间：${new Date(
-      pubdate * 1000
-    ).toLocaleString()}\n视频简介：${desc}\n视频文本内容：${transcript}`;
   }
 };
 
@@ -129,6 +133,6 @@ export const getAIVideoSummary = async (params: { path: string }) => {
 export const getVideoTextContentTool = tool(getVideoTextContent, {
   name: 'get_video_text_content',
   description:
-    '提取视频文本内容的工具，输入视频的avid，输出视频的内容（包括视频标题、发布时间、视频简介和视频文本内容），参数必须要传入视频的avid（oid）',
+    '提取视频文本内容的工具，输入视频的avid，输出视频的内容（包括视频标题、发布时间、视频简介、视频文本内容和视频AI总结），参数必须要传入视频的avid（oid）',
   schema: z.string().describe('视频的avid'),
 });
