@@ -20,6 +20,7 @@
     "@langchain/mcp-adapters": "^1.1.1",
     "@langchain/openai": "^1.2.0",
     "axios": "^1.13.2",
+    "better-sqlite3": "^12.5.0",
     "dotenv": "^17.2.3",
     "ffmpeg-static": "^5.3.0",
     "ffprobe-static": "^3.1.0",
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "@langchain/langgraph": "^1.0.7",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/fluent-ffmpeg": "^2.1.28",
     "@types/md5": "^2.3.6",
     "@types/node": "^25.0.3",

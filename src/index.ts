@@ -84,7 +84,7 @@ async function tick() {
 }
 
 async function main() {
-  // const content = await getVideoTextContent('115783476709326');
+  // const content = await getVideoTextContent('115815487639550');
   // console.log(content);
   await tick();
   // const chain = await getCommentChain({

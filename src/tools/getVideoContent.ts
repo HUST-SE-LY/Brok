@@ -8,6 +8,7 @@ import { tool } from 'langchain';
 import z from 'zod';
 import { readFileSync } from 'fs';
 import OpenAI from 'openai';
+import { getCachedVideoContent, setCachedVideoContent } from '../utils/cache';
 
 dotenv.config();
 
@@ -43,6 +44,10 @@ export const getVideoTextContent = async (avid: string) => {
   if (!avid) {
     throw new Error('avid is required');
   }
+  const cached = getCachedVideoContent(avid);
+  if (cached) {
+    return cached;
+  }
   const { cid, title, pubdate, desc, owner, duration } = await getVideoBaseInfo(
     { avid }
   );
@@ -72,9 +77,17 @@ export const getVideoTextContent = async (avid: string) => {
     );
     if (duration <= 240) {
       const videoSummary = await getAIVideoSummary({ path: videoPath });
-      return `视频UP主名：${owner}\n视频标题：${title}\n发布时间：${new Date(
+      const result = `视频UP主名：${owner}\n视频标题：${title}\n发布时间：${new Date(
         pubdate * 1000
       ).toLocaleString()}\n视频简介：${desc}\n视频AI总结：${videoSummary}`;
+      if (
+        videoSummary &&
+        videoSummary.trim() &&
+        videoSummary !== '视频内容总结失败'
+      ) {
+        setCachedVideoContent(avid, result);
+      }
+      return result;
     } else {
       let duration = Number.POSITIVE_INFINITY;
       try {
@@ -82,9 +95,13 @@ export const getVideoTextContent = async (avid: string) => {
       } catch {}
       const audioPath = await extractAudio(videoPath, `downloads/${avid}.m4a`);
       const transcript = await transcribeAudio(audioPath);
-      return `视频UP主名：${owner}\n视频标题：${title}\n发布时间：${new Date(
+      const result = `视频UP主名：${owner}\n视频标题：${title}\n发布时间：${new Date(
         pubdate * 1000
       ).toLocaleString()}\n视频简介：${desc}\n视频文本内容：${transcript}`;
+      if (typeof transcript === 'string' && transcript.trim()) {
+        setCachedVideoContent(avid, result);
+      }
+      return result;
     }
   }
 };
