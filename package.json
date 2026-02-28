@@ -19,6 +19,7 @@
     "@langchain/deepseek": "^1.0.3",
     "@langchain/mcp-adapters": "^1.1.1",
     "@langchain/openai": "^1.2.0",
+    "ali-oss": "^6.23.0",
     "axios": "^1.13.2",
     "better-sqlite3": "^12.5.0",
     "dotenv": "^17.2.3",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@langchain/langgraph": "^1.0.7",
+    "@types/ali-oss": "^6.23.3",
     "@types/better-sqlite3": "^7.6.13",
     "@types/fluent-ffmpeg": "^2.1.28",
     "@types/md5": "^2.3.6",
