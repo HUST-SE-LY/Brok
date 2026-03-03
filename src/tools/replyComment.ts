@@ -50,7 +50,7 @@ export const replyCommentTool = tool(replyComment, {
     type: z
       .number()
       .describe(
-        '评论区的类型，有三种取值，如果是视频评论区，则为1，如果是动态评论区，则为17，如果是文字动态评论区，则为11'
+        '评论区的类型，有两种取值，如果是视频评论区，则为1，如果是动态评论区/文字动态评论区，则为17'
       ),
     oid: z
       .string()
