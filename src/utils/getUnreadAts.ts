@@ -37,7 +37,8 @@ export async function getUnreadReplys(unreadReplyNums: number) {
       ?.filter(
         (item: any) =>
           item?.item?.business_id === Type.Video ||
-          item?.item?.business_id === Type.Opus
+          item?.item?.business_id === Type.Opus ||
+          item?.item?.business_id === Type.TextOpus
       ) || [];
   const resText = await Promise.all(replyItems.map(getMsgInfo));
   return resText;
@@ -65,7 +66,7 @@ export const getMsgInfo = async (at: any) => {
   const item = at?.item || {};
   const user = at?.user || {};
   const businessId = item?.business_id || '';
-  if (businessId !== Type.Video && businessId !== Type.Opus) {
+  if (businessId !== Type.Video && businessId !== Type.Opus && businessId !== Type.TextOpus) {
     return '在既不是视频评论区也不是动态评论区中被at了，无需回复，终止任务';
   }
   let oid;
