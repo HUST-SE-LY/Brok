@@ -84,31 +84,7 @@ async function tick() {
 }
 
 async function main() {
-  // const content = await getVideoTextContent('115815487639550');
-  // console.log(content);
   await tick();
-  // const chain = await getCommentChain({
-  //   oid: '898001236988526632',
-  //   type: 17,
-  //   rootId: 284495403457,
-  //   targetRpid: 284898517857,
-  // });
-  // console.log(chain);
-  // const res = await getOpusContent({
-  //   dynamic_id: '622088689560650558'
-  // });
-  // console.log(res);
-  // const agent = await getAgent();
-  // const result = await agent.invoke(
-  //   { messages: [{ role: 'user', content: 'cs主播玩机器最喜欢的职业选手是谁？' }] },
-  // );
-  // console.log(result);
-  // const model = qwenModel;
-  // const res = await model.invoke(
-  //   "cs2主播玩机器最喜欢的职业选手是谁？"
-  // );
-  // console.log(res);
-  // await getUnreadReplyAndAts();
 }
 
 main().catch((error) => {

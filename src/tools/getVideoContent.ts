@@ -2,7 +2,7 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 import { getWbiParams } from '../utils/wbi';
 import { downloadWithHeaders } from '../utils/download';
-import { extractAudio, getMediaDuration } from '../utils/media';
+import { extractAudio, getMediaDuration, trimVideo } from '../utils/media';
 import { transcribeAudio } from '../utils/transcribe';
 import { tool } from 'langchain';
 import z from 'zod';
@@ -26,7 +26,7 @@ const getVideoBaseInfo = async (params: { avid: string }) => {
       headers: {
         Cookie: `SESSDATA=${process.env.SESSDATA}`,
       },
-    }
+    },
   );
   console.log(response.data);
   const baseData = response.data?.data;
@@ -49,7 +49,7 @@ export const getVideoTextContent = async (avid: string) => {
     return cached;
   }
   const { cid, title, pubdate, desc, owner, duration } = await getVideoBaseInfo(
-    { avid }
+    { avid },
   );
   if (cid) {
     const wbiParams = await getWbiParams({
@@ -65,20 +65,20 @@ export const getVideoTextContent = async (avid: string) => {
         headers: {
           Cookie: `SESSDATA=${process.env.SESSDATA}`,
         },
-      }
+      },
     );
     const videoUrl = response.data?.data?.durl?.[0]?.url;
     if (!videoUrl) {
       throw new Error('No video url');
     }
-    const videoPath = await downloadWithHeaders(
+    let videoPath = await downloadWithHeaders(
       videoUrl,
-      `downloads/${avid}.mp4`
+      `downloads/${avid}.mp4`,
     );
     if (duration <= 240) {
       const videoSummary = await getAIVideoSummary({ path: videoPath });
       const result = `视频UP主名：${owner}\n视频标题：${title}\n发布时间：${new Date(
-        pubdate * 1000
+        pubdate * 1000,
       ).toLocaleString()}\n视频简介：${desc}\n视频AI总结：${videoSummary}`;
       if (
         videoSummary &&
@@ -93,10 +93,15 @@ export const getVideoTextContent = async (avid: string) => {
       try {
         duration = await getMediaDuration(videoPath);
       } catch {}
+      if (duration > 3600) {
+        const trimmedVideoPath = `downloads/${avid}_trimmed.mp4`;
+        await trimVideo(videoPath, trimmedVideoPath, 3600);
+        videoPath = trimmedVideoPath;
+      }
       const audioPath = await extractAudio(videoPath, `downloads/${avid}.m4a`);
       const transcript = await transcribeAudio(audioPath);
       const result = `视频UP主名：${owner}\n视频标题：${title}\n发布时间：${new Date(
-        pubdate * 1000
+        pubdate * 1000,
       ).toLocaleString()}\n视频简介：${desc}\n视频文本内容：${transcript}`;
       if (typeof transcript === 'string' && transcript.trim()) {
         setCachedVideoContent(avid, result);

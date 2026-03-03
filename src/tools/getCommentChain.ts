@@ -2,6 +2,7 @@ import { axiosInstance } from '../utils/axios';
 import { Type } from './replyComment';
 import { bvidToAvid } from '../utils/bvidToAvid';
 import { tool } from 'langchain';
+import OpenAI from 'openai';
 import z from 'zod';
 
 interface GetReplyChainOptions {
@@ -16,7 +17,7 @@ type ReplyNode = {
   parent: number;
   root: number;
   member?: { uname?: string };
-  content?: { message?: string };
+  content?: { message?: string; pictures?: { img_src?: string }[] };
   ctime?: number;
   replies?: ReplyNode[];
 };
@@ -84,7 +85,7 @@ const fetchRepliesUnderRoot = async (params: {
           pn,
           ps,
         },
-      }
+      },
     );
     // console.log(res.data?.data.replies)
     if (!root) root = (res.data?.data?.root || null) as ReplyNode | null;
@@ -157,16 +158,58 @@ export const getCommentChain = async (opts: GetReplyChainOptions) => {
     if (root && !chain.find((n) => Number(n.rpid) === Number(rootId))) {
       chain.push(root);
     }
-    const ordered = chain.reverse();
-    return JSON.stringify(
-      ordered.map((n) => ({
+    const ordered =
+      chain.reverse()?.map((n) => ({
         uname: n.member?.uname || '',
         message: n.content?.message || '',
-      })) || []
-    );
+        pictures: n.content?.pictures?.map((p) => p.img_src || '') || [],
+      })) || [];
+    for (const comment of ordered) {
+      if (comment.pictures.length) {
+        const imageSummary = await getAIImageSummary(comment.pictures);
+        comment.message += `\n该评论附带的图片的内容总结：${imageSummary}`;
+      }
+    }
+    return JSON.stringify(ordered.map((n) => ({
+      uname: n.uname,
+      message: n.message,
+    })) || []);
   } catch (e) {
     console.error('获取评论链失败', e);
     return '获取评论链失败';
+  }
+};
+
+const getAIImageSummary = async (images: string[]) => {
+  if (!images.length) return '';
+  const openai = new OpenAI({
+    // 若没有配置环境变量，请用百炼API Key将下行替换为：apiKey: "sk-xxx"
+    // 新加坡和北京地域的API Key不同。获取API Key：https://help.aliyun.com/zh/model-studio/get-api-key
+    apiKey: process.env.ALI_CLOUD_API_KEY,
+    // 以下是北京地域base_url，如果使用新加坡地域的模型，需要将base_url替换为：https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+    baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+  });
+  // @ts-ignore
+  const completion = await openai.chat.completions.create({
+    model: 'qwen-vl-plus',
+    messages: [
+      {
+        role: 'user',
+        content: [
+          ...images.map((img) => ({
+            type: 'image_url',
+            image_url: { url: img },
+          })),
+          { type: 'text', text: '请精简总结以上的主要内容' },
+        ],
+      },
+    ],
+  });
+  if (completion.choices[0].message.content) {
+    console.log(completion.choices[0].message.content);
+    return completion.choices[0].message.content;
+  } else {
+    return '图片内容总结失败';
   }
 };
 
@@ -178,7 +221,7 @@ export const getCommentChainTool = tool(getCommentChain, {
     type: z
       .enum(Type)
       .describe(
-        '评论区类型，视频评论区或动态评论区，视频评论区为1，动态评论区为17'
+        '评论区类型，视频评论区或动态评论区，视频评论区为1，动态评论区为17',
       ),
     rootId: z.number().describe('根评论的ID'),
     targetRpid: z.number().describe('指定评论的ID'),

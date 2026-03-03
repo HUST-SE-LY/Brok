@@ -36,3 +36,18 @@ export async function getMediaDuration(inputPath: string) {
     });
   });
 }
+
+export async function trimVideo(inputPath: string, outputPath: string, duration: number) {
+  const dir = path.dirname(outputPath);
+  await fs.promises.mkdir(dir, { recursive: true });
+  await new Promise<void>((resolve, reject) => {
+    ffmpeg(inputPath)
+      .setStartTime(0)
+      .setDuration(duration)
+      .output(outputPath)
+      .on('end', () => resolve())
+      .on('error', reject)
+      .run();
+  });
+  return outputPath;
+}
