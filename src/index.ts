@@ -14,6 +14,7 @@ import { qwenModel } from './model/tongyi';
 import { getOpusContent } from './tools/getOpusContent';
 import { getCommentChain } from './tools/getCommentChain';
 import { Type } from './tools/replyComment';
+import { sendMsgToUser } from './tools/sendMsgToUser';
 
 const POLL_INTERVAL_MS = Number(process.env.POLL_INTERVAL_MS || '10000');
 let timer: ReturnType<typeof setTimeout> | null = null;

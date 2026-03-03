@@ -91,5 +91,5 @@ export const getMsgInfo = async (at: any) => {
       aid: oid,
     });
   }
-  return `用户${user?.nickname || ''}在${typeText}中提到了你，内容为:${sourceContent}。这个${typeText}的oid为${oid}，根评论的id(root)为${root}，要回复的评论id(parent)为${parent}`;
+  return `用户${user?.nickname || ''}在${typeText}中提到了你，用户的mid是${user?.mid || ''}，内容为:${sourceContent}。这个${typeText}的oid为${oid}，根评论的id(root)为${root}，要回复的评论id(parent)为${parent}`;
 };

@@ -4,6 +4,7 @@ import { bvidToAvid } from '../utils/bvidToAvid';
 import { tool } from 'langchain';
 import OpenAI from 'openai';
 import z from 'zod';
+import { getCachedImageSummary, setCachedImageSummary } from '../utils/cache';
 
 interface GetReplyChainOptions {
   oid: string;
@@ -170,10 +171,12 @@ export const getCommentChain = async (opts: GetReplyChainOptions) => {
         comment.message += `\n该评论附带的图片的内容总结：${imageSummary}`;
       }
     }
-    return JSON.stringify(ordered.map((n) => ({
-      uname: n.uname,
-      message: n.message,
-    })) || []);
+    return JSON.stringify(
+      ordered.map((n) => ({
+        uname: n.uname,
+        message: n.message,
+      })) || [],
+    );
   } catch (e) {
     console.error('获取评论链失败', e);
     return '获取评论链失败';
@@ -182,11 +185,25 @@ export const getCommentChain = async (opts: GetReplyChainOptions) => {
 
 const getAIImageSummary = async (images: string[]) => {
   if (!images.length) return '';
+
+  const cachedSummaries: string[] = [];
+  const uncachedImages: string[] = [];
+
+  for (const img of images) {
+    const cached = getCachedImageSummary(img);
+    if (cached) {
+      cachedSummaries.push(cached);
+    } else {
+      uncachedImages.push(img);
+    }
+  }
+
+  if (uncachedImages.length === 0) {
+    return cachedSummaries.join('\n');
+  }
+
   const openai = new OpenAI({
-    // 若没有配置环境变量，请用百炼API Key将下行替换为：apiKey: "sk-xxx"
-    // 新加坡和北京地域的API Key不同。获取API Key：https://help.aliyun.com/zh/model-studio/get-api-key
     apiKey: process.env.ALI_CLOUD_API_KEY,
-    // 以下是北京地域base_url，如果使用新加坡地域的模型，需要将base_url替换为：https://dashscope-intl.aliyuncs.com/compatible-mode/v1
     baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
   });
   // @ts-ignore
@@ -196,7 +213,7 @@ const getAIImageSummary = async (images: string[]) => {
       {
         role: 'user',
         content: [
-          ...images.map((img) => ({
+          ...uncachedImages.map((img) => ({
             type: 'image_url',
             image_url: { url: img },
           })),
@@ -207,9 +224,16 @@ const getAIImageSummary = async (images: string[]) => {
   });
   if (completion.choices[0].message.content) {
     console.log(completion.choices[0].message.content);
-    return completion.choices[0].message.content;
+    for (const img of uncachedImages) {
+      setCachedImageSummary(img, completion.choices[0].message.content);
+    }
+    return [...cachedSummaries, completion.choices[0].message.content].join(
+      '\n',
+    );
   } else {
-    return '图片内容总结失败';
+    return cachedSummaries.length > 0
+      ? cachedSummaries.join('\n')
+      : '图片内容总结失败';
   }
 };
 
