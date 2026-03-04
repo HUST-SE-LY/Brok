@@ -12,6 +12,16 @@ export async function sendMsgToUser(
   }
 ) {
   const { mid, msg } = input;
+  let needTip = true;
+  // 先确认一下用户是不是自己的粉丝，如果是的话，就不需要额外的说明了
+  const res = await axiosInstance.get('https://api.bilibili.com/x/web-interface/relation', {
+    params: {
+      mid,
+    }
+  })
+  if(res.data?.data?.be_relation?.attribute === 1 || res.data?.data?.be_relation?.attribute === 6) {
+    needTip = false;
+  }
   const { CSRF: csrf } = process.env;
   if (!csrf) {
     throw new Error('csrf is required');
@@ -23,7 +33,7 @@ export async function sendMsgToUser(
   formData.append("msg[msg_type]", "1");
   formData.append("msg[msg_status]", "0");
   formData.append("msg[content]", JSON.stringify({
-    content: msg + '\n[doge]未收到回复前只能发送一条消息，如需继续接收消息请回复，如已回复请忽略，暂不支持私信聊天喔～'
+    content: msg + (needTip ? '\n\n[doge]未关注前只能发送一条消息，如需继续接收消息请回复或关注，如已回复请忽略，暂不支持私信聊天喔～' : ''),
   }));
   formData.append("msg[timestamp]", String(Math.floor(Date.now() / 1000)));
   formData.append("msg[new_face_version]", "0");
@@ -43,7 +53,6 @@ export async function sendMsgToUser(
       },
     }
   );
-  console.log(response)
   console.log(response.data)
 
   return response.data;
