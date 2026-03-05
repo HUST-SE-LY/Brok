@@ -94,9 +94,9 @@ export const getVideoTextContent = async (avid: string) => {
         duration = await getMediaDuration(videoPath);
       } catch {}
       if (duration > 3600) {
-        const trimmedVideoPath = `downloads/${avid}_trimmed.mp4`;
-        await trimVideo(videoPath, trimmedVideoPath, 3600);
-        videoPath = trimmedVideoPath;
+        return `视频UP主名：${owner}\n视频标题：${title}\n发布时间：${new Date(
+          pubdate * 1000,
+        ).toLocaleString()}\n视频简介：${desc}\n视频文本内容：视频内容超过一小时，无法总结`;
       }
       const audioPath = await extractAudio(videoPath, `downloads/${avid}.m4a`);
       const transcript = await transcribeAudio(audioPath);
