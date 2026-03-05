@@ -19,7 +19,7 @@ export async function sendMsgToUser(
       mid,
     }
   })
-  if(res.data?.data?.be_relation?.attribute === 1 || res.data?.data?.be_relation?.attribute === 6) {
+  if (res.data?.data?.be_relation?.attribute === 2 || res.data?.data?.be_relation?.attribute === 6) {
     needTip = false;
   }
   const { CSRF: csrf } = process.env;
